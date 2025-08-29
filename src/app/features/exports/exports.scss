@@ -26,12 +26,13 @@
 .export-card {
   width: var(--card-w);
   padding: calc(var(--card-pad) * 1.25);
-  margin: 14px;
+  margin: 16px;
   border-radius: var(--radius);
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04) inset;
   min-height: 260px;
+  box-sizing: border-box;
 
   transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
   transition: transform 120ms ease, box-shadow 220ms ease;
@@ -288,6 +289,16 @@
   }
   .export-card select {
     width: 100%;
+  }
+  .card-frame {
+    width: 98%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .export-card {
+    width: calc(100% - 12px);
+    margin: 6px auto;
   }
 }
 
