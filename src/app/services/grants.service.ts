@@ -29,7 +29,7 @@ export class GrantsService {
     return this.http.get<ListResponse>(`${this.base}/api/grants`, { params: p });
   }
 
-  get(uniqueKey: string, mark_viewed = true): Observable<GrantDetail> {
+  get(uniqueKey: string, mark_viewed = false): Observable<GrantDetail> {
     const params = new HttpParams().set('mark_viewed', String(mark_viewed));
     return this.http.get<GrantDetail>(`${this.base}/api/grants/${uniqueKey}`, { params });
   }
