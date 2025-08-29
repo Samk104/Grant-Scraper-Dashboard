@@ -1,5 +1,4 @@
 <div class="exports-page">
-
   <div class="card-frame">
     <div
       class="export-card"
@@ -26,12 +25,14 @@
           <option [ngValue]="ExportType.approved">Approved</option>
           <option [ngValue]="ExportType.disapproved">Disapproved</option>
           <option [ngValue]="ExportType.llm_not_relevant">LLM marked Not Relevant</option>
-          <option [ngValue]="ExportType.approved_no_email_or_no_url">Approved missing email or URL</option>
+          <option [ngValue]="ExportType.approved_no_email_or_no_url">
+            Approved missing email or URL
+          </option>
         </select>
 
         <button class="export-btn" (click)="onExport()" [disabled]="loading()">
-          @if (!loading()) { <span>Export CSV</span> }
-          @if (loading()) { <span class="spinner"></span> }
+          @if (!loading()) { <span>Export CSV</span> } @if (loading()) {
+          <span class="spinner"></span> }
         </button>
       </div>
 
@@ -40,24 +41,42 @@
   </div>
 
   @if (showToastFlag) {
-    <div class="toast">{{ toastText }}</div>
+  <div class="toast">{{ toastText }}</div>
   }
 
-  <!-- Slide-up panel -->
   <div class="did-you-know" [class.open]="showDidYouKnow">
-    <div class="dyk-inner">
+    <div
+      class="dyk-inner"
+      draggable="true"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Did you know panel"
+      (touchstart)="onDYKDragStart($event)"
+      (touchmove)="onDYKDragMove($event)"
+      (touchend)="onDYKDragEnd()"
+      (mousedown)="onDYKDragStart($event)"
+      (mousemove)="onDYKDragMove($event)"
+      (mouseup)="onDYKDragEnd()"
+      [style.transform]="dragOffset ? 'translateY(' + dragOffset + 'px)' : null"
+      [class.dragging]="dragging"
+    >
       <div class="dyk-accent"></div>
+      <button class="dyk-dismiss" (click)="showDidYouKnow = false" aria-label="Dismiss panel">
+        ✕
+      </button>
+
       <div class="dyk-header">
         <h3>DID YOU KNOW?</h3>
         <p class="lead">
-          You just exported a list that’s <strong>missing reference or contact info</strong>.
-          Use the prompt below in ChatGPT (normal or Agent mode) to quickly find the missing URLs and emails.
+          You just exported a list that’s <strong>missing reference or contact info</strong>. Use
+          the prompt below in ChatGPT (normal or Agent mode) to quickly find the missing URLs and
+          emails.
         </p>
       </div>
 
       <div class="prompt-box">
-        <pre>{{ didYouKnowPrompt }}</pre>
-        <button class="copy-btn" (click)="copyPrompt()">Copy prompt</button>
+        <pre>{{ didYouKnowPrompt | slice : 0 : 220 }}…</pre>
+        <button class="copy-btn" (click)="copyPrompt()">Copy full prompt</button>
       </div>
 
       <div class="steps">
@@ -65,9 +84,9 @@
         <ol>
           <li>Open ChatGPT and start a new chat.</li>
           <li>Upload the CSV you just downloaded.</li>
-          <li>Paste the prompt (copied above) and send.</li>
-          <li>Review the proposed <em>found_url</em> / <em>found_email</em> values and confidence.</li>
-          <li>Download the returned CSV and import it into your workflow.</li>
+          <li>Paste the copied prompt and send.</li>
+          <li>Review the proposed <em>found_url</em> / <em>found_email</em> values.</li>
+          <li>Download the returned CSV and import it.</li>
         </ol>
       </div>
     </div>
