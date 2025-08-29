@@ -1,0 +1,356 @@
+<h1 class="text-2xl font-semibold mb-4">Grants</h1>
+
+<div class="mb-4 rounded-2xl border bg-white p-4 shadow-sm">
+  <div class="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
+    <div class="flex-1">
+      <label class="block text-sm text-slate-600 mb-1">Search</label>
+      <input
+        [(ngModel)]="q"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="title, url, description, source…"
+        class="w-full rounded-xl border p-2.5 focus:outline-none focus:ring"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Reviewed</label>
+      <select
+        [(ngModel)]="reviewed"
+        [ngModelOptions]="{ standalone: true }"
+        class="rounded-xl border p-2.5"
+      >
+        <option value="">Any</option>
+        <option value="unreviewed">Unreviewed</option>
+        <option value="reviewed">Reviewed</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Relevance</label>
+      <select
+        [(ngModel)]="relevance"
+        (ngModelChange)="relevanceLocked.set(false)"
+        [ngModelOptions]="{ standalone: true }"
+        class="rounded-xl border p-2.5"
+      >
+        <option value="">Any</option>
+        <option value="relevant">Relevant</option>
+        <option value="not_relevant">Not relevant</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Feedback</label>
+      <select
+        [(ngModel)]="feedback"
+        [ngModelOptions]="{ standalone: true }"
+        class="rounded-xl border p-2.5"
+      >
+        <option value="">Any</option>
+        <option value="has_feedback">Has feedback</option>
+        <option value="no_feedback">No feedback</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Source</label>
+      <input
+        [(ngModel)]="source"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="E.g. creativecapital"
+        class="rounded-xl border p-2.5"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm text-slate-600 mb-1">Min amount</label>
+      <input
+        type="number"
+        [ngModel]="minAmount()"
+        (ngModelChange)="onMinAmountChange($event)"
+        [ngModelOptions]="{ standalone: true }"
+        min="0"
+        class="w-28 rounded-xl border p-2.5"
+      />
+    </div>
+
+    <button (click)="applyFilters()" class="btn btn-primary">Apply</button>
+  </div>
+  @if (filtersApplied()) {
+  <div
+    class="fixed top-6 left-1/2 -translate-x-1/2 z-50
+           rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900
+           px-3 py-1.5 text-lg shadow-md pointer-events-none">
+    Filters updated
+  </div>
+}
+</div>
+
+@if (error()) {
+<p class="mb-3 text-sm text-rose-600">{{ error() }}</p>
+}
+
+<div class="flex flex-col gap-3">
+  @for (g of items(); track g.unique_key) {
+  <article
+    animate.enter="fade-in"
+    animate.leave="fade-out"
+    class="grant-card"
+    [class.is-approved]="g.user_feedback_info?.user_is_relevant === true"
+    [class.is-rejected]="g.user_feedback_info?.user_is_relevant === false"
+    (touchstart)="onTouchStart(g, $event)"
+    (touchmove)="onTouchMove(g, $event)"
+    (touchend)="onTouchEnd(g, $event)"
+    [style.transform]="dragX()[g.unique_key] ? 'translateX(' + dragX()[g.unique_key] + 'px)' : null"
+  >
+    <div class="flex items-start justify-between gap-3" (click)="toggleExpand(g)">
+      <div class="min-w-0">
+        <h2 class="text-base font-semibold leading-tight">
+          {{ g.title }}
+        </h2>
+        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+          @if (g.llm_info?.is_relevant === true) {
+          <span class="badge badge-green">AI: Relevant</span>
+          } @if (g.llm_info?.is_relevant === false) {
+          <span class="badge badge-red">AI: Not Relevant</span>
+          } @if (g.grant_amount != 'Not Available') {
+          <span class="badge">Amount: {{ g.grant_amount }}</span> } @if (g.deadline != 'Not
+          Available') { <span class="badge">Deadline: {{ g.deadline }}</span> } @if (g.is_viewed) {
+          <span class="badge">Viewed</span> } @if (g.user_feedback_info?.user_is_relevant === true)
+          { <span class="badge badge-green">Approved</span> } @if
+          (g.user_feedback_info?.user_is_relevant === false) {
+          <span class="badge badge-red">Disapproved</span> }
+        </div>
+      </div>
+
+      <div class="hidden sm:flex items-center gap-2 shrink-0 sm:flex-row sm:w-auto sm:justify-end">
+        <button class="chip" (click)="decide(g, true); $event.stopPropagation()">Approve →</button>
+        <button class="chip chip-red" (click)="decide(g, false); $event.stopPropagation()">
+          ← Disapprove
+        </button>
+        <button class="chip chip-ghost" (click)="toggleExpand(g); $event.stopPropagation()">
+          @if (expandedKey() === g.unique_key) { Collapse } @else { Expand }
+        </button>
+      </div>
+    </div>
+
+    @if (expandedKey() === g.unique_key) {
+    <div class="mt-3 grid gap-3 md:grid-cols-3">
+      <div class="space-y-4 text-sm md:col-span-2 my-4 p-3">
+        @if (g.description) {
+        <div class="w-[90%]">
+          <p class="text-slate-700">{{ g.description }}</p>
+        </div>
+        }
+            <div class="p-3 rounded-xl bg-slate-50 border text-slate-700 w-[90%]">
+              <div class="text-md font-medium text-slate-500 mb-2">Scraped Details:</div>
+
+              <div class="grid gap-2 sm:grid-cols-2">
+                @if (g.deadline && g.deadline !== 'Not Available') {
+                  <div><span class="label">Deadline:</span> {{ g.deadline }}</div>
+                }
+
+                <div>
+                  <span class="label">URL:</span>
+                  @if (g.url) {
+                    <a class="link" [href]="g.url" target="_blank" rel="noopener">Open</a>
+                    <button class="link ml-2" (click)="copy(g.url)">Copy</button>
+                  } @else { — }
+                </div>
+
+                <div><span class="label">Grant amount:</span> {{ g.grant_amount && g.grant_amount !== 'Not Available' ? g.grant_amount : (g.llm_info?.award_amount || '—') }}</div>
+
+                @if (g.tags && g.tags !== 'Not Available') {
+                  <div><span class="label">Tags:</span> {{ g.tags }}</div>
+                }
+
+                @if (g.email && g.email !== 'Not Available') {
+                  <div>
+                    <span class="label">Email:</span> {{ g.email }}
+                    <button class="link ml-2" (click)="copy(g.email)">Copy</button>
+                  </div>
+                }
+
+                <div>
+                  <span class="label">Source:</span>
+                  @if (g.source?.startsWith('http')) {
+                    <a class="link" [href]="g.source!" target="_blank" rel="noopener">Open</a>
+                    <button class="link ml-2" (click)="copy(g.source!)">Copy</button>
+                  } @else {
+                    {{ g.source || '—' }}
+                  }
+                </div>
+              </div>
+            </div>
+
+
+        @if (g.llm_info) {
+        <div class="p-2 rounded-xl bg-slate-50 border text-slate-700 w-[90%]">
+          <div class="text-md font-medium text-slate-500 mb-1">LLM Details:</div>
+          <div class="text-sm mb-1">Deadline: {{ g.llm_info.deadline }}</div>
+          <div class="text-sm mb-1">Explanation: {{ g.llm_info.explanation }}</div>
+          @if (g.llm_info.location_applicable === true) {
+          <span class="my-4 mr-2 badge badge-green m-auto p-2"
+            >Location Applicable: {{ g.llm_info?.location_applicable }}</span
+          >
+          } @if (g.llm_info.location_applicable === false) {
+          <span class="badge badge-red m-auto p-2"
+            >Location Applicable: {{ g.llm_info?.location_applicable }}</span
+          >
+          } @if (isHighPriority(g.llm_info)) {
+          <span class="mx-4 badge badge-green"
+            >Priority Score: {{ g.llm_info.priority_score ?? '-' }}</span
+          >
+          } @if (isLowPriority(g.llm_info)) {
+          <span class="mx-4 badge badge-red"
+            >Priority Score: {{ g.llm_info.priority_score ?? '-' }}</span
+          >
+          } @if(g.llm_info.possibility){
+          <span class="mx-4 badge">Possibility: {{ g.llm_info.possibility ?? '-' }}</span>
+          }
+        </div>
+        }
+      </div>
+
+      <form class="space-y-3 text-sm" (submit)="submitForm(g); $event.preventDefault()">
+        <fieldset class="rounded-xl border p-3">
+          <legend class="text-sm text-slate-600">
+            Relevant? <span class="text-rose-500">*</span>
+          </legend>
+          <div class="mt-2 flex gap-4">
+            <label class="inline-flex items-center gap-2">
+              <input
+                type="radio"
+                [ngModel]="getCorrectionBoolean(g.unique_key, 'is_relevant') ? 'true' : ''"
+                (ngModelChange)="setCorrectionBoolean(g.unique_key, 'is_relevant', true)"
+                [ngModelOptions]="{ standalone: true }"
+                name="rel-yes-{{ g.unique_key }}"
+              />
+              <span>Yes</span>
+            </label>
+            <label class="inline-flex items-center gap-2">
+              <input
+                type="radio"
+                [ngModel]="
+                  getCorrectionBoolean(g.unique_key, 'is_relevant') === false ? 'false' : ''
+                "
+                (ngModelChange)="setCorrectionBoolean(g.unique_key, 'is_relevant', false)"
+                [ngModelOptions]="{ standalone: true }"
+                name="rel-no-{{ g.unique_key }}"
+              />
+              <span>No</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div>
+          <label class="label block mb-1">Rationale</label>
+          <textarea
+            class="w-full min-h-[72px] rounded-xl border p-2.5 focus:outline-none focus:ring"
+            [ngModel]="getRationale(g.unique_key)"
+            (ngModelChange)="setRationale(g.unique_key, $event)"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Why is this relevant / not relevant?"
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="label block mb-1">URL</label>
+            <input
+              class="w-full rounded-xl border p-2.5"
+              [ngModel]="getCorrectionString(g.unique_key, 'url')"
+              (ngModelChange)="setCorrectionString(g.unique_key, 'url', $event)"
+              [ngModelOptions]="{ standalone: true }"
+            />
+          </div>
+          <div>
+            <label class="label block mb-1">Email</label>
+            <input
+              class="w-full rounded-xl border p-2.5"
+              [ngModel]="getCorrectionString(g.unique_key, 'email')"
+              (ngModelChange)="setCorrectionString(g.unique_key, 'email', $event)"
+              [ngModelOptions]="{ standalone: true }"
+            />
+          </div>
+          <div>
+            <label class="label block mb-1">Grant amount</label>
+            <input
+              class="w-full rounded-xl border p-2.5"
+              [ngModel]="getCorrectionString(g.unique_key, 'grant_amount')"
+              (ngModelChange)="setCorrectionString(g.unique_key, 'grant_amount', $event)"
+              [ngModelOptions]="{ standalone: true }"
+            />
+          </div>
+          <div>
+            <label class="label block mb-1">Deadline</label>
+            <input
+              class="w-full rounded-xl border p-2.5"
+              placeholder="YYYY-MM-DD"
+              [ngModel]="getCorrectionString(g.unique_key, 'deadline')"
+              (ngModelChange)="setCorrectionString(g.unique_key, 'deadline', $event)"
+              [ngModelOptions]="{ standalone: true }"
+            />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="label block mb-1">Tags (comma-separated)</label>
+            <input
+              class="w-full rounded-xl border p-2.5"
+              [ngModel]="getCorrectionString(g.unique_key, 'tags')"
+              (ngModelChange)="setCorrectionString(g.unique_key, 'tags', $event)"
+              [ngModelOptions]="{ standalone: true }"
+            />
+          </div>
+        </div>
+
+        @if (formErrors()[g.unique_key]) {
+        <div class="rounded-xl border border-rose-200 bg-rose-50 text-rose-700 px-3 py-2 text-sm">
+          {{ formErrors()[g.unique_key] }}
+        </div>
+        }
+
+        <div class="flex gap-2 justify-end">
+          <button class="btn btn-outline" type="button" (click)="toggleExpand(g)">Cancel</button>
+          <button class="btn btn-primary" type="submit">Submit feedback</button>
+        </div>
+      </form>
+    </div>
+    }
+  </article>
+  } @if (!loading() && items().length === 0) {
+  <div class="rounded-2xl border bg-white p-6 text-slate-600 text-lg">
+    No grants matched your filters.
+  </div>
+  }
+</div>
+
+<!-- Paging -->
+<div class="mt-4 flex items-center justify-between">
+  <div class="text-sm text-slate-600">
+    Page {{ page() }} • Showing {{ (page() - 1) * perPage }} -
+    {{ page() * perPage < total() ? page() * perPage : total() }} of {{ total() }}
+  </div>
+  <div class="flex gap-2">
+    <button class="btn btn-outline" (click)="prev()" [disabled]="page() === 1">Prev</button>
+    @if (page() * perPage < total()) {
+    <button class="btn btn-primary" (click)="next()" [disabled]="page() * perPage >= total()">
+      Next
+    </button>
+    }
+  </div>
+</div>
+
+@if (dryRun()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  <div class="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
+    <h3 class="text-lg font-semibold mb-2">Dry-run preview (admin/guest)</h3>
+    <p class="text-sm text-slate-600 mb-3">Server would apply the following changes:</p>
+    <pre class="rounded-xl bg-slate-50 border p-3 text-xs overflow-auto">{{
+      dryRun()?.diff | json
+    }}</pre>
+    <div class="mt-4 text-right">
+      <button class="btn btn-primary" (click)="dryRun.set(null)">Close</button>
+    </div>
+  </div>
+</div>
+}

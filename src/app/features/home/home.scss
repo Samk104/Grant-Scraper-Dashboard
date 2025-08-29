@@ -1,0 +1,50 @@
+.card {
+  @apply rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200;
+  border-color: rgb(226 232 240); /* slate-200 */
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(2, 6, 23, 0.12);
+}
+
+.fade-in { animation: fade-in-up 180ms ease-out; }
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+
+.card--indigo  { background-image: linear-gradient(180deg, #eef2ff, #ffffff); border-color: #c7d2fe; }
+.card--indigo:hover  { border-color: #818cf8; }
+
+.card--emerald { background-image: linear-gradient(180deg, #ecfdf5, #ffffff); border-color: #a7f3d0; }
+.card--emerald:hover { border-color: #34d399; }
+
+.card--amber   { background-image: linear-gradient(180deg, #fffbeb, #ffffff); border-color: #fde68a; }
+.card--amber:hover   { border-color: #f59e0b; }
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl text-sm font-medium transition-all;
+  @apply px-5 py-3; /* base size */
+}
+
+/* Larger size variant, still responsive */
+.btn-lg {
+  @apply w-full sm:w-auto;     /* full-width on mobile, auto on >= sm */
+  @apply text-base md:text-lg; /* readable sizing */
+  @apply px-6 py-3.5;          /* a bit roomier */
+}
+
+.btn-primary {
+  @apply text-white;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  box-shadow: 0 6px 18px rgba(99,102,241,0.35);
+}
+.btn-primary:hover { filter: brightness(1.05); }
+
+.btn-outline {
+  @apply border text-slate-700;
+  border-color: rgb(203 213 225);
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+.btn-outline:hover { border-color: #6366f1; }

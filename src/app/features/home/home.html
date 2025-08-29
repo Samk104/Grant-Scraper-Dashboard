@@ -1,0 +1,27 @@
+<h1 class="text-2xl font-semibold mb-6">Dashboard</h1>
+
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div animate.enter="fade-in" class="card card--indigo">
+    <div class="label">Total Grants</div>
+    <div class="value">{{ total() ?? '—' }}</div>
+  </div>
+
+  <div animate.enter="fade-in" class="card card--emerald">
+    <div class="label">Unreviewed</div>
+    <div class="value">{{ unviewed() ?? '—' }}</div>
+  </div>
+
+  <div animate.enter="fade-in" class="card card--amber">
+    <div class="label">With Feedback</div>
+    <div class="value">{{ withFeedback() ?? '—' }}</div>
+  </div>
+</div>
+
+@if (error()) {
+  <p class="mt-4 text-sm text-rose-600">{{ error() }}</p>
+}
+
+<div class="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+  <a routerLink="/grants"  class="btn btn-primary btn-lg">Start reviewing</a>
+  <a routerLink="/exports" class="btn btn-outline btn-lg">Bulk download</a>
+</div>

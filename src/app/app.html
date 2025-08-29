@@ -1,0 +1,25 @@
+<div class="min-h-screen">
+  <header class="sticky top-0 z-40 bg-white/70 backdrop-blur border-b">
+    <div class="mx-auto max-w-6xl px-4 py-3 flex items-center gap-6">
+      <a routerLink="/home" class="font-semibold hover:text-slate-700">Grant Scraper</a>
+      <nav class="flex gap-2">
+        <a routerLink="/grants"
+           routerLinkActive="!text-slate-900 bg-slate-200"
+           class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900">
+          Grants
+        </a>
+        <a routerLink="/exports"
+           routerLinkActive="!text-slate-900 bg-slate-200"
+           class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900">
+          Exports
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6">
+    <router-outlet></router-outlet>
+  </main>
+
+  <app-access-code-modal></app-access-code-modal>
+</div>
