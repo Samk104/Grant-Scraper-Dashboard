@@ -1,7 +1,7 @@
 import { Component, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ExportsService, ExportType, EXPORT_TYPE  } from '../../services/exports.service';
+import { ExportsService, ExportType, EXPORT_TYPE } from '../../services/exports.service';
 import { HttpResponse } from '@angular/common/http';
 
 @Component({
@@ -12,11 +12,9 @@ import { HttpResponse } from '@angular/common/http';
   styleUrls: ['./exports.scss'],
 })
 export class ExportsComponent {
-ExportType = EXPORT_TYPE;
-
+  ExportType = EXPORT_TYPE;
 
   type: ExportType = EXPORT_TYPE.all;
-
 
   loading = signal(false);
   showToastFlag = false;
@@ -27,35 +25,40 @@ ExportType = EXPORT_TYPE;
   tiltY = signal(0);
   isHovering = signal(false);
 
+  dragStartY = 0;
+  dragOffset = 0;
+  dragging = false;
+  private dragThreshold = 120;
+
   showDidYouKnow = false;
 
   readonly didYouKnowPrompt = `
-You just downloaded a CSV of grant opportunities that were APPROVED by our team but are missing a URL and/or an email contact.
-Please help fill in the missing fields using cautious web searches.
+              You just downloaded a CSV of grant opportunities that were APPROVED by our team but are missing a URL and/or an email contact.
+              Please help fill in the missing fields using cautious web searches.
 
-WHAT TO DO
-1) Ingest the attached CSV. Each row has: id, title, url, source, scraped_at, is_relevant, grant_amount, deadline, tags, user_feedback, user_feedback_info, email.
-2) For rows where url is blank/"Not Available" or email is blank/"Not Available":
-   • Search for the official grant/opportunity page (prefer the publisher's own site over 3rd parties).
-   • If multiple candidates exist, pick the one most consistent with title/source/tags; otherwise mark as "ambiguous".
-   • For email: prefer a dedicated grants/applications contact; if only generic "info@" exists, use it and note it as generic.
-   • Avoid scraping personal emails from PDFs unless clearly intended for public inquiries.
-3) Output a CLEAN CSV (same order and number of rows as input) with these columns:
-   id,title,url,source,scraped_at,is_relevant,grant_amount,deadline,tags,user_feedback,user_feedback_info,email,
-   and two extra columns at the end:
-   found_url,found_email
-   • found_url/found_email should be your proposed values (may be blank if truly unknown), NOT overwriting url/email.
-4) Add a final column "confidence" with values: high | medium | low, based on how certain you are.
-5) If a row remains unresolved, add a short reason in a "notes" column (e.g., "multiple orgs share name", "event page removed").
+              WHAT TO DO
+              1) Ingest the attached CSV. Each row has: id, title, url, source, scraped_at, is_relevant, grant_amount, deadline, tags, user_feedback, user_feedback_info, email.
+              2) For rows where url is blank/"Not Available" or email is blank/"Not Available":
+                • Search for the official grant/opportunity page (prefer the publisher's own site over 3rd parties).
+                • If multiple candidates exist, pick the one most consistent with title/source/tags; otherwise mark as "ambiguous".
+                • For email: prefer a dedicated grants/applications contact; if only generic "info@" exists, use it and note it as generic.
+                • Scrape personal emails from PDFs and other documents to the best of your ability digging deep if required.
+              3) Output a CLEAN CSV (same order and number of rows as input) with these columns:
+                id,title,url,source,scraped_at,is_relevant,grant_amount,deadline,tags,user_feedback,user_feedback_info,email,
+                and two extra columns at the end:
+                found_url,found_email
+                • found_url/found_email should be your proposed values (may be blank if truly unknown), NOT overwriting url/email.
+              4) Add a final column "confidence" with values: high | medium | low, based on how certain you are.
+              5) If a row remains unresolved, add a short reason in a "notes" column (e.g., "multiple orgs share name", "event page removed").
 
-GUARDRAILS
-• Prioritize official sources; cite them in notes when confidence != high.
-• Do NOT invent addresses; avoid data broker sites and scraped personal directories.
-• Preserve original row order; ensure CSV is UTF-8 and quotes fields if needed.
+              GUARDRAILS
+              • Prioritize official sources; cite them in notes when confidence != high.
+              • Do NOT invent addresses; avoid data broker sites and scraped personal directories.
+              • Preserve original row order; ensure CSV is UTF-8 and quotes fields if needed.
 
-DELIVERABLE
-Return only a downloadable CSV with the added columns: found_url,found_email,confidence,notes.
-  `.trim();
+              DELIVERABLE
+              Return only a downloadable CSV with the added columns: found_url,found_email,confidence,notes.
+                `.trim();
 
   constructor(private api: ExportsService) {}
 
@@ -149,5 +152,28 @@ Return only a downloadable CSV with the added columns: found_url,found_email,con
     } catch {
       this.showToast('Copy failed. Select and copy manually.', 2800);
     }
+  }
+
+  onDYKDragStart(ev: TouchEvent | MouseEvent) {
+    if (!this.showDidYouKnow) return;
+    this.dragging = true;
+    this.dragStartY =
+      (ev instanceof TouchEvent ? ev.touches[0].clientY : (ev as MouseEvent).clientY) || 0;
+  }
+
+  onDYKDragMove(ev: TouchEvent | MouseEvent) {
+    if (!this.dragging) return;
+    const y = ev instanceof TouchEvent ? ev.touches[0].clientY : (ev as MouseEvent).clientY;
+    const delta = y - this.dragStartY;
+    this.dragOffset = Math.max(0, delta);
+  }
+
+  onDYKDragEnd() {
+    if (!this.dragging) return;
+    if (this.dragOffset > this.dragThreshold) {
+      this.showDidYouKnow = false;
+    }
+    this.dragging = false;
+    this.dragOffset = 0;
   }
 }
