@@ -1,1 +1,75 @@
-<p>exports works!</p>
+<div class="exports-page">
+
+  <div class="card-frame">
+    <div
+      class="export-card"
+      (mouseenter)="onEnter()"
+      (mouseleave)="onLeave()"
+      [style.--tilt-x.deg]="tiltX()"
+      [style.--tilt-y.deg]="tiltY()"
+      [class.loading]="loading()"
+    >
+      <h1>Data Exports</h1>
+      <p class="sub">Download filtered CSVs of your grants.</p>
+
+      <div class="controls">
+        <label for="exportType">Export type</label>
+        <select
+          id="exportType"
+          [(ngModel)]="type"
+          (click)="onSelectClick()"
+          [disabled]="loading()"
+          aria-label="Select export type"
+        >
+          <option [ngValue]="ExportType.all">All grants</option>
+          <option [ngValue]="ExportType.viewed">Viewed</option>
+          <option [ngValue]="ExportType.approved">Approved</option>
+          <option [ngValue]="ExportType.disapproved">Disapproved</option>
+          <option [ngValue]="ExportType.llm_not_relevant">LLM marked Not Relevant</option>
+          <option [ngValue]="ExportType.approved_no_email_or_no_url">Approved missing email or URL</option>
+        </select>
+
+        <button class="export-btn" (click)="onExport()" [disabled]="loading()">
+          @if (!loading()) { <span>Export CSV</span> }
+          @if (loading()) { <span class="spinner"></span> }
+        </button>
+      </div>
+
+      <p class="hint">The CSV will download with the filename provided by the server.</p>
+    </div>
+  </div>
+
+  @if (showToastFlag) {
+    <div class="toast">{{ toastText }}</div>
+  }
+
+  <!-- Slide-up panel -->
+  <div class="did-you-know" [class.open]="showDidYouKnow">
+    <div class="dyk-inner">
+      <div class="dyk-accent"></div>
+      <div class="dyk-header">
+        <h3>DID YOU KNOW?</h3>
+        <p class="lead">
+          You just exported a list that’s <strong>missing reference or contact info</strong>.
+          Use the prompt below in ChatGPT (normal or Agent mode) to quickly find the missing URLs and emails.
+        </p>
+      </div>
+
+      <div class="prompt-box">
+        <pre>{{ didYouKnowPrompt }}</pre>
+        <button class="copy-btn" (click)="copyPrompt()">Copy prompt</button>
+      </div>
+
+      <div class="steps">
+        <h4>How to use it</h4>
+        <ol>
+          <li>Open ChatGPT and start a new chat.</li>
+          <li>Upload the CSV you just downloaded.</li>
+          <li>Paste the prompt (copied above) and send.</li>
+          <li>Review the proposed <em>found_url</em> / <em>found_email</em> values and confidence.</li>
+          <li>Download the returned CSV and import it into your workflow.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
