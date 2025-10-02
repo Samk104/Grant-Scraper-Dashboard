@@ -12,7 +12,6 @@ export const accessCodeInterceptor: HttpInterceptorFn = (req, next) => {
   return next(withHeader).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status !== 401) return throwError(() => err);
-
       return from(svc.waitForCode()).pipe(
         switchMap((fresh) => {
           const retry = req.clone({ setHeaders: { 'X-Access-Code': fresh } });
