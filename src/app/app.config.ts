@@ -11,7 +11,6 @@ import { firstValueFrom } from 'rxjs';
 function initializeRuntimeConfig() {
   return provideAppInitializer(async () => {
     try {
-      // you can use DI here; initializers run in an injection context
       const http = inject(HttpClient);
       const cfg = await firstValueFrom(http.get<{ apiBaseUrl?: string }>('/assets/config.json'));
       (window as any).__API_BASE_URL__ = cfg.apiBaseUrl ?? '';
